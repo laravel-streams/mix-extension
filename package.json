@@ -28,20 +28,20 @@
         "release": "np --yolo --no-yarn"
     },
     "dependencies": {
-        "@babel/core": "^7.6.0",
-        "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
-        "@babel/plugin-syntax-dynamic-import": "^7.2.0",
-        "@babel/plugin-transform-runtime": "^7.6.0",
-        "@babel/preset-env": "^7.6.0",
-        "@babel/preset-stage-2": "^7.0.0",
+        "@babel/core": "^7.12.13",
+        "@babel/plugin-proposal-object-rest-spread": "^7.12.13",
+        "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+        "@babel/plugin-transform-runtime": "^7.12.15",
+        "@babel/preset-env": "^7.12.13",
+        "@babel/preset-stage-2": "^7.8.3",
         "babel-plugin-import": "^1.13.3",
-        "ts-loader": "^8.0.12",
+        "ts-loader": "^8.0.15",
         "resolve-url-loader": "^3.1.2",
-        "sass": "^1.29.0",
-        "sass-loader": "^8.0.2"
+        "sass": "^1.32.6",
+        "sass-loader": "^11.0.0"
     },
     "devDependencies": {
-        "@types/node": "^14.14.20",
+        "@types/node": "^14.14.25",
         "@types/babel-core": "^6.25.6",
         "@types/lodash": "^4.14.168",
         "@types/sass": "^1.16.0",
@@ -53,10 +53,10 @@
         "np": "^7.3.0"
     },
     "peerDependencies": {
-        "webpack": "^5.11.1",
+        "webpack": "^5.21.1",
         "babel-loader": "^8.2.2",
-        "cross-env": "^6.0.0",
-        "laravel-mix": "^6.0.6",
+        "cross-env": "^7.0.3",
+        "laravel-mix": "^6.0.11",
         "lodash": "^4.17.20"
     }
 }
