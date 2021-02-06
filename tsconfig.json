@@ -29,8 +29,6 @@
         "emitDecoratorMetadata": true,
         "baseUrl": ".",
         "outDir": "lib",
-        "declaration": true,
-        "declarationDir": "lib",
         "paths": {
         },
         "typeRoots": [
