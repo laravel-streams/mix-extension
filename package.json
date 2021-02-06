@@ -1,7 +1,7 @@
 {
     "name": "@laravel-streams/mix-extension",
     "description": "Add Laravel Streams into the Mix",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "private": false,
     "publishConfig": {
         "access": "public"
