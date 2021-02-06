@@ -25,7 +25,8 @@
         "mix"
     ],
     "scripts": {
-        "release": "np --yolo --no-yarn"
+        "release": "np --yolo --no-yarn",
+        "prepublish": "tsc"
     },
     "dependencies": {
         "@babel/core": "^7.12.13",
