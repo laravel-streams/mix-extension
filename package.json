@@ -6,6 +6,17 @@
     "publishConfig": {
         "access": "public"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/laravel-streams/mix-extension"
+    },
+    "homepage": "https://streams.dev",
+    "maintainers": [
+        {"name": "Ryan Thompson","email": "ryan@pyrocms.com","url": "https://github.com/RyanThompson"},
+        {"name": "Robin Radic","email": "rradic@hotmail.com","url": "https://github.com/RobinRadic"}
+    ],
+    "license": "MIT",
+    "readme": "README.md",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "keywords": [
@@ -13,7 +24,6 @@
         "laravel mix",
         "mix"
     ],
-    "license": "MIT",
     "scripts": {
         "release": "np --yolo --no-yarn"
     },
@@ -48,10 +58,5 @@
         "cross-env": "^6.0.0",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.20"
-    },
-    "readme": "README.md",
-    "repository": {
-        "type": "git",
-        "url": "git@github.com:laravel-streams/mix-extension"
     }
 }
