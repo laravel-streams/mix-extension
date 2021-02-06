@@ -17,7 +17,6 @@
     "scripts": {
         "release": "np --yolo --no-yarn"
     },
-    "readme": "README.md",
     "dependencies": {
         "@babel/core": "^7.6.0",
         "@babel/plugin-proposal-object-rest-spread": "^7.5.5",
@@ -49,5 +48,10 @@
         "cross-env": "^6.0.0",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.20"
+    },
+    "readme": "README.md",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:laravel-streams/mix-extension"
     }
 }
