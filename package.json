@@ -1,7 +1,7 @@
 {
     "name": "@laravel-streams/mix-extension",
     "description": "Add Laravel Streams into the Mix",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "private": false,
     "publishConfig": {
         "access": "public"
@@ -33,8 +33,7 @@
         "mix"
     ],
     "scripts": {
-        "release": "np --yolo --no-yarn",
-        "prepublish": "tsc"
+        "prepublish": "bump --commit --tag \"%s\" --push"
     },
     "dependencies": {
         "@babel/core": "^7.12.13",
