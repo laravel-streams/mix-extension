@@ -19,7 +19,7 @@ declare interface LoaderItem {
 
 declare interface LoaderItemSass extends LoaderItem {
     loader: 'sass-loader'
-    options: sass.Options
+    options: sass.Options & { implementation?: any, }
 }
 
 declare interface LoaderItemPostcss extends LoaderItem {
@@ -91,7 +91,8 @@ export interface LaravelStreamExtensionPacakge {
     entryName: string
     prefix: string
     scssRule?: webpack.RuleSetRule
-    package:any
+    package: any
+
     path(...parts): string
 
     has(...parts): boolean
@@ -118,7 +119,7 @@ export class LaravelStreamExtension implements ClassComponent {
     }
 
     public register(options: LaravelStreamExtensionOptions): void {
-        this.options  = {
+        this.options = {
             packages         : [],
             outputPath       : 'vendor',
             applyOptimization: true,
@@ -135,7 +136,7 @@ export class LaravelStreamExtension implements ClassComponent {
                 entry    : path(`lib/index.ts`),
                 prefix   : Vendors.prefix(name),
                 entryName: Vendors.clear(name),
-                package: require(path('package.json'))
+                package  : require(path('package.json')),
             };
         });
 
@@ -152,16 +153,43 @@ export class LaravelStreamExtension implements ClassComponent {
     public webpackConfig(config: webpack.Configuration): void {
         let path = this.options.outputPath;
 
-        let rules    = (config.module?.rules as webpack.RuleSetRule[]);
-        let scssRule = rules.find(rule => rule.test.toString() === '/\\.scss$/');
+        const replaceScssImplementation = (rules: webpack.RuleSetRule[], implementation: any) => {
+            for ( let rule of rules ) {
+                for ( let one of rule.use as Array<webpack.RuleSetUseItem>|any ) {
+                    if ( one.loader === 'sass-loader' ) {
+                        (one as LoaderItemSass).options.implementation = implementation;
+                        return;
+                    }
+                }
+            }
+        };
+        const replaceStyleLoader = (rules: webpack.RuleSetRule[], replacement) => {
+            for ( let rule of rules ) {
+                for ( let one of rule.use as Array<webpack.RuleSetUseItem>|any ) {
+                    if ( one.loader === 'style-loader' ) {
+                        one.loader = replacement;
+                        return;
+                    }
+                }
+            }
+        }
+
+        let rules                       = (config.module?.rules as webpack.RuleSetRule[]);
+        let scssRule                    = rules.find(rule => rule.test.toString() === '/\\.scss$/');
+        replaceScssImplementation(scssRule.oneOf, require('sass'));
+        // replaceStyleLoader(scssRule.oneOf, MiniCssExtractPlugin.loader)
         scssRule.oneOf.forEach(one => {
             let use = (one?.use as { loader: string, options?: any }[]);
             if ( use ) {
                 use.shift();
-                use.unshift({ loader: MiniCssExtractPlugin.loader });
+                use.unshift({
+                    loader: MiniCssExtractPlugin.loader,
+                });
             }
         });
+
         let miniCssExtractPlugin: { options: MiniCssExtractPlugin.PluginOptions } = config.plugins.find(plugin => plugin.constructor.name === 'MiniCssExtractPlugin') as any;
+
         miniCssExtractPlugin.options.filename                                     = (chunk) => {
             let c = chunk.chunk;
             if ( Vendors.has(c.name) ) {
@@ -224,7 +252,7 @@ export class LaravelStreamExtension implements ClassComponent {
         };
         config.externals = config.externals || {};
         this.packages.forEach(pkg => {
-            config.externals[pkg.package.name] = ['streams', pkg.entryName]
+            config.externals[ pkg.package.name ] = [ 'streams', pkg.entryName ];
         });
         config.resolve.extensions.push(...[ '.ts', '.tsx', '.scss' ]);
     }
@@ -276,18 +304,18 @@ export class LaravelStreamExtension implements ClassComponent {
                 test   : /\.tsx?$/,
                 exclude: /node_modules\//,
                 use    : [
-                        {
-                        loader: 'babel-loader',
+                    {
+                        loader : 'babel-loader',
                         options: {
 
-                            babelrc   : false,
+                            babelrc       : false,
                             configFile    : false,
                             cacheDirectory: false,
-                            compact   : !isDev,
-                            sourceMaps: isDev,
-                            comments  : isDev,
+                            compact       : !isDev,
+                            sourceMaps    : isDev,
+                            comments      : isDev,
                             // presets   : [ ['@babel/preset-env'] ],
-                            plugins   : [
+                            plugins: [
                                 [ 'import', {
                                     libraryName            : 'lodash',
                                     libraryDirectory       : '',
@@ -295,7 +323,7 @@ export class LaravelStreamExtension implements ClassComponent {
                                 } ],
                                 '@babel/plugin-syntax-dynamic-import',
                             ],
-                        }
+                        },
                     },
                     {
                         loader : 'ts-loader',
