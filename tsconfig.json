@@ -1,9 +1,13 @@
 {
-    "compileOnSave": false,
+    "compileOnSave": true,
     "compilerOptions": {
         "pretty": true,
-        "sourceMap": true,
-        "target": "es2017",
+        "inlineSourceMap": true,
+        "declaration": true,
+        "declarationDir": "./dist",
+        "outDir": "./dist",
+        "importHelpers": true,
+        "target": "es6",
         "module": "commonjs",
         "jsx": "preserve",
         "jsxFactory": "h",
@@ -24,14 +28,11 @@
         ],
         "lib": [
             "ES2020",
-            "scripthost",
-            "DOM",
+            "scripthost"
         ],
     },
     "include": [
-        "src",
-        "rollup.config.ts",
-        "test"
+        "src"
     ],
     "exclude": [
         "node_modules",

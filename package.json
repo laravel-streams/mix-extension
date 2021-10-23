@@ -1,18 +1,22 @@
 {
     "name": "@laravel-streams/mix-extension",
     "version": "1.0.0",
-    "private": false,
     "publishConfig": {
         "access": "public"
     },
     "types": "dist/index.d.ts",
     "main": "dist/index.js",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com/laravel-streams/mix-extension"
+    },
     "scripts": {
-        "clean": "npm-run-all clean:dist clean:js clean:doc",
+        "clean": "npm-run-all clean:dist clean:js",
         "clean:dist": "rimraf ./dist",
-        "clean:js": "rimraf ./{src}/**/*.js",
-        "build": "npm-run-all clean compile",
-        "compile": "tsc -p tsconfig.build.json && mv ./out/src/ dist && rm -rf ./out"
+        "clean:js": "rimraf ./src/**/*.js  &>/dev/null",
+        "build": "npm-run-all clean:dist compile",
+        "compile": "tsc -p tsconfig.json"
     },
     "peerDependencies": {
         "@babel/core": "^7.15.8",
