@@ -6,3 +6,4 @@ declare module 'laravel-mix/types/index' {
 }
 export { StreamsMixExtension, StreamsMixExtensionOptions };
 export default StreamsMixExtension;
+export * from './utils';

@@ -1,9 +1,10 @@
 import mix from 'laravel-mix';
 import { ClassComponent } from 'laravel-mix/types/component';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { Options as TSConfig } from 'ts-loader';
 import * as webpack from 'webpack';
 import { TransformOptions } from '@babel/core';
+import { findFileUp, findStreamPackages } from './utils';
 
 let isProd = mix.inProduction();
 let isDev  = !mix.inProduction();
@@ -21,7 +22,7 @@ const dependencies = [
 ];
 
 /** npm package vendor name, excluding the @ sign. like `laravel-streams` */
-export type PackageVendor = string
+export type PackageName = string
 /** The exported library name prefix like 'streams' */
 export type PackageNamespacePrefix = string
 /** The exported library name like 'api' */
@@ -45,11 +46,18 @@ export interface StreamsMixExtensionOptions {
      * config.externals['@laravel-streams/api'] = ['streams','api']
      * ```
      */
-    streamsPackages?: Record<PackageVendor, [ PackageNamespacePrefix, PackageNamespaceName[] ]>;
+    streamsPackages?: Record<PackageName, [ PackageNamespacePrefix, PackageNamespaceName[] ]>;
     /**
      * If the {@see StreamsMixExtensionOptions.streamsPackages} doesn't comply with your wishes, then do it yourself:
      */
     externals?: Record<string, string>;
+
+    /**
+     * The extension needs to know the root project's absolute path.
+     * It will search upwards from the directory mix is called for this file
+     * defaults to 'artisan'
+     */
+    rootProjectFile?: string;
 }
 
 
@@ -61,6 +69,7 @@ export class StreamsMixExtension implements ClassComponent {
         this.options = {
             combineTsLoaderWithBabel: true,
             alterBabelConfig        : true,
+            rootProjectFile         : 'artisan',
             tsConfig                : {},
             ...options,
             ts             : {
@@ -71,10 +80,10 @@ export class StreamsMixExtension implements ClassComponent {
             },
             streamsPackages: {
                 ...options.streamsPackages || {},
-                'laravel-streams': [ 'streams', [ 'core', 'api', 'ui' ] ],
             },
             externals      : {},
         };
+
 
         return;
     }
@@ -110,6 +119,7 @@ export class StreamsMixExtension implements ClassComponent {
             ],
             plugins   : [
                 '@babel/plugin-syntax-dynamic-import',
+                "@babel/plugin-transform-runtime"
             ],
         };
     }
@@ -120,6 +130,7 @@ export class StreamsMixExtension implements ClassComponent {
 
     public tsConfig(): Partial<TSConfig> {
         return {
+            appendTsSuffixTo: [/\.vue$/],
             transpileOnly  : true,
             logLevel       : 'INFO',
             logInfoToStdOut: true,
@@ -137,6 +148,18 @@ export class StreamsMixExtension implements ClassComponent {
         };
     };
 
+    public getRootProjectPath() {
+        const filePath = findFileUp(this.options.rootProjectFile, __dirname);
+        if ( !filePath ) {
+            throw new Error(`could not find root project path based on searching for file "${this.options.rootProjectFile}"`);
+        }
+        return dirname(filePath);
+    }
+
+    getStreamPackages() {
+        return findStreamPackages(this.getRootProjectPath());
+    }
+
     public webpackConfig(config: webpack.Configuration) {
         config.devtool       = isDev ? 'inline-cheap-module-source-map' : false;
         config.resolve       = config.resolve || {};
@@ -145,13 +168,15 @@ export class StreamsMixExtension implements ClassComponent {
         };
         config.externals     = this.options.externals;
 
-        Object.entries(this.options.streamsPackages).forEach(([ vendor, value ]: [ PackageVendor, [ PackageNamespacePrefix, PackageNamespaceName[] ] ]) => {
-            let [ prefix, names ] = value;
-            vendor                = vendor.startsWith('@') ? vendor : '@' + vendor;
-
-            for ( let name of names ) {
-                config.externals[ [ vendor, name ].join('/') ] = [ prefix, name ];
+        const streamPackages = this.getStreamPackages();
+        Object.values(streamPackages).forEach(streamPackage => {
+            if ( false === [ 'mix', 'webpack' ].includes(streamPackage.streams.bundler) ) {
+                return;
             }
+            let [ prefix, name ] = streamPackage.streams.output.name;
+            let packageName      = streamPackage.pkg.name;
+            if ( this.options.name[ 0 ] === prefix && this.options.name[ 1 ] === name ) return;
+            config.externals[ packageName ] = [ prefix, name ];
         });
 
 
@@ -180,13 +205,25 @@ export class StreamsMixExtension implements ClassComponent {
             chunkIds : 'named',
             minimize : isProd,
         };
-        const rule = config.module.rules.find((rule:webpack.RuleSetRule) => {
-            return rule.test && rule.test && typeof (rule.test as RegExp).test === 'function' && (rule.test as RegExp).test('script.ts')
-        }) as webpack.RuleSetRule
-        rule.use = [
-            { loader: 'babel-loader', options: this.babelConfig() },
-            { loader: 'ts-loader', options: this.tsConfig() },
-        ]
+
+        const ruleIndex          = config.module.rules.findIndex((rule: webpack.RuleSetRule) => typeof rule.loader === 'string' && rule.loader.endsWith('ts-loader/index.js')) ;
+        config.module.rules.splice(ruleIndex,1)
+        // delete rule.loader;
+        // delete rule.options;
+        // rule.use            = [
+        //     { loader: 'babel-loader', options: this.babelConfig() },
+        //     { loader: 'ts-loader', options: this.tsConfig() },
+        // ];
     }
 
+    public webpackRules(): webpack.RuleSetRule | webpack.RuleSetRule[] {
+        return [ {
+            test   : /\.tsx?$/,
+            exclude: /node_modules\//,
+            use    : [
+                { loader: 'babel-loader', options: this.babelConfig() },
+                { loader: 'ts-loader', options: this.tsConfig() },
+            ],
+        } ];
+    }
 }

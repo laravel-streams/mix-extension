@@ -12,3 +12,5 @@ mix.extend(extension.name(), extension);
 
 export { StreamsMixExtension, StreamsMixExtensionOptions };
 export default StreamsMixExtension;
+
+export * from './utils';

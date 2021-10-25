@@ -1,6 +1,6 @@
 {
     "name": "@laravel-streams/mix-extension",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "publishConfig": {
         "access": "public"
     },
@@ -11,22 +11,45 @@
         "type": "git",
         "url": "git@github.com/laravel-streams/mix-extension"
     },
+    "streams": {
+        "output": {
+            "type": "commonjs"
+        },
+        "src": "src",
+        "bundler": null,
+        "scripts": {
+            "dev": "compile",
+            "prod": "build",
+            "watch": "watch",
+            "test": null
+        }
+    },
     "scripts": {
         "clean": "npm-run-all clean:dist clean:js",
         "clean:dist": "rimraf ./dist",
         "clean:js": "rimraf ./src/**/*.js  &>/dev/null",
         "build": "npm-run-all clean:dist compile",
-        "compile": "tsc -p tsconfig.json"
+        "compile": "tsc -p tsconfig.json",
+        "watch": "tsc -p tsconfig.json --watch"
     },
-    "peerDependencies": {
+    "dependencies": {
         "@babel/core": "^7.15.8",
         "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+        "@babel/plugin-transform-runtime": "^7.15.8",
         "@babel/preset-env": "^7.15.8",
-        "laravel-mix": "*",
+        "glob": "^7.2.0",
+        "resolve-dir": "^1.0.1",
         "ts-lib": "^0.0.5",
         "ts-loader": "^9.2.6",
         "ts-node": "^10.4.0",
-        "typescript": "^4.4.4",
-        "webpack": "*"
+        "typescript": "^4.4.4"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.2.0",
+        "laravel-mix": "*",
+        "webpack": "^5.59.1"
+    },
+    "peerDependencies": {
+        "laravel-mix": "*"
     }
 }
