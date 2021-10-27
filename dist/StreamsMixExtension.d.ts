@@ -9,7 +9,6 @@ export declare type PackageNamespacePrefix = string;
 /** The exported library name like 'api' */
 export declare type PackageNamespaceName = string;
 export interface StreamsMixExtensionOptions {
-    name: [string, string];
     ts?: {
         configFile?: string;
         declarationDir?: string;
@@ -36,6 +35,11 @@ export interface StreamsMixExtensionOptions {
      * defaults to 'artisan'
      */
     rootProjectFile?: string;
+    filename?: string;
+    chunkFilename?: string;
+    path?: string;
+    name: [string, string] | undefined;
+    type: 'var' | 'module' | 'assign' | 'assign-properties' | 'this' | 'window' | 'self' | 'global' | 'commonjs' | 'commonjs2' | 'commonjs-module' | 'amd' | 'amd-require' | 'umd' | 'umd2' | 'jsonp' | 'system';
 }
 export declare class StreamsMixExtension implements ClassComponent {
     options: StreamsMixExtensionOptions;

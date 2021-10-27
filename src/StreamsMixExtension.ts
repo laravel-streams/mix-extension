@@ -29,7 +29,6 @@ export type PackageNamespacePrefix = string
 export type PackageNamespaceName = string
 
 export interface StreamsMixExtensionOptions {
-    name: [ string, string ];
     ts?: {
         configFile?: string
         declarationDir?: string
@@ -58,6 +57,11 @@ export interface StreamsMixExtensionOptions {
      * defaults to 'artisan'
      */
     rootProjectFile?: string;
+    filename?: string;
+    chunkFilename?: string;
+    path?: string;
+    name: [ string, string ] | undefined;
+    type: 'var' | 'module' | 'assign' | 'assign-properties' | 'this' | 'window' | 'self' | 'global' | 'commonjs' | 'commonjs2' | 'commonjs-module' | 'amd' | 'amd-require' | 'umd' | 'umd2' | 'jsonp' | 'system';
 }
 
 
@@ -71,6 +75,10 @@ export class StreamsMixExtension implements ClassComponent {
             alterBabelConfig        : true,
             rootProjectFile         : 'artisan',
             tsConfig                : {},
+            path                    : resolve(process.cwd(), 'resources/public'),
+            filename                : 'js/[name].js',
+            chunkFilename           : 'js/chunk.[name].js',
+            type                    : 'window',
             ...options,
             ts             : {
                 configFile    : resolve(process.cwd(), 'webpack.tsconfig.json'),
@@ -119,7 +127,7 @@ export class StreamsMixExtension implements ClassComponent {
             ],
             plugins   : [
                 '@babel/plugin-syntax-dynamic-import',
-                "@babel/plugin-transform-runtime"
+                '@babel/plugin-transform-runtime',
             ],
         };
     }
@@ -130,13 +138,13 @@ export class StreamsMixExtension implements ClassComponent {
 
     public tsConfig(): Partial<TSConfig> {
         return {
-            appendTsSuffixTo: [/\.vue$/],
-            transpileOnly  : true,
-            logLevel       : 'INFO',
-            logInfoToStdOut: true,
-            happyPackMode  : true, experimentalWatchApi: true,
-            configFile     : this.options.ts.configFile,
-            compilerOptions: {
+            appendTsSuffixTo: [ /\.vue$/ ],
+            transpileOnly   : true,
+            logLevel        : 'INFO',
+            logInfoToStdOut : true,
+            happyPackMode   : true, experimentalWatchApi: true,
+            configFile      : this.options.ts.configFile,
+            compilerOptions : {
                 target        : 'es6' as any,
                 module        : 'esnext' as any,
                 declaration   : this.options.ts.declaration,
@@ -168,6 +176,9 @@ export class StreamsMixExtension implements ClassComponent {
         };
         config.externals     = this.options.externals;
 
+        config.experiments              = config.experiments || {};
+        config.experiments.outputModule = this.options.type === 'module';
+
         const streamPackages = this.getStreamPackages();
         Object.values(streamPackages).forEach(streamPackage => {
             if ( false === [ 'mix', 'webpack' ].includes(streamPackage.streams.bundler) ) {
@@ -181,12 +192,12 @@ export class StreamsMixExtension implements ClassComponent {
 
 
         config.output       = {
-            path                                 : resolve('./resources/public'),
-            filename                             : 'js/[name].js',
-            chunkFilename                        : 'js/chunk.[name].js',
+            path                                 : this.options.path,
+            filename                             : this.options.filename,
+            chunkFilename                        : this.options.chunkFilename,
             library                              : {
                 name: this.options.name,
-                type: 'window',
+                type: this.options.type,
             },
             publicPath                           : `/vendor/${this.options.name[ 0 ]}/${this.options.name[ 1 ]}/`,
             devtoolFallbackModuleFilenameTemplate: 'webpack:///[resource-path]?[hash]',
@@ -206,8 +217,8 @@ export class StreamsMixExtension implements ClassComponent {
             minimize : isProd,
         };
 
-        const ruleIndex          = config.module.rules.findIndex((rule: webpack.RuleSetRule) => typeof rule.loader === 'string' && rule.loader.endsWith('ts-loader/index.js')) ;
-        config.module.rules.splice(ruleIndex,1)
+        const ruleIndex = config.module.rules.findIndex((rule: webpack.RuleSetRule) => typeof rule.loader === 'string' && rule.loader.endsWith('ts-loader/index.js'));
+        config.module.rules.splice(ruleIndex, 1);
         // delete rule.loader;
         // delete rule.options;
         // rule.use            = [
