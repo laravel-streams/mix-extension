@@ -11,26 +11,16 @@
         "type": "git",
         "url": "git@github.com/laravel-streams/mix-extension"
     },
-    "streams": {
-        "output": {
-            "type": "commonjs"
-        },
-        "src": "src",
-        "bundler": null,
-        "scripts": {
-            "dev": "compile",
-            "prod": "build",
-            "watch": "watch",
-            "test": null
-        }
-    },
     "scripts": {
         "clean": "npm-run-all clean:dist clean:js",
         "clean:dist": "rimraf ./dist",
         "clean:js": "rimraf ./src/**/*.js  &>/dev/null",
-        "build": "npm-run-all clean:dist compile",
+        "build": "npm-run-all clean compile",
         "compile": "tsc -p tsconfig.json",
-        "watch": "tsc -p tsconfig.json --watch"
+        "watch": "tsc -p tsconfig.json --watch",
+        "prepublish": "npm-run-all build",
+        "prepare": "npm-run-all build",
+        "release": "yarn exec np --yolo --no-yarn"
     },
     "dependencies": {
         "@babel/core": "^7.15.8",
@@ -51,5 +41,18 @@
     },
     "peerDependencies": {
         "laravel-mix": "*"
+    },
+    "streams": {
+        "output": {
+            "type": "commonjs"
+        },
+        "src": "src",
+        "bundler": null,
+        "scripts": {
+            "dev": "compile",
+            "prod": "build",
+            "watch": "watch",
+            "test": null
+        }
     }
 }
