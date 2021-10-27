@@ -20,7 +20,7 @@
         "watch": "tsc -p tsconfig.json --watch",
         "prepublish": "npm-run-all build",
         "prepare": "npm-run-all build",
-        "release": "yarn exec np --yolo --no-yarn"
+        "release": "yarn exec np --yolo"
     },
     "dependencies": {
         "@babel/core": "^7.15.8",
