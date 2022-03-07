@@ -1,5 +1,5 @@
 import mix from 'laravel-mix';
-import { ClassComponent } from 'laravel-mix/types/component';
+import { ComponentInterface } from 'laravel-mix/types/component';
 import { dirname, resolve } from 'path';
 import { Options as TSConfig } from 'ts-loader';
 import * as webpack from 'webpack';
@@ -65,7 +65,7 @@ export interface StreamsMixExtensionOptions {
 }
 
 
-export class StreamsMixExtension implements ClassComponent {
+export class StreamsMixExtension implements ComponentInterface {
 
     options: StreamsMixExtensionOptions;
 

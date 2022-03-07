@@ -1,6 +1,6 @@
 {
     "name": "@laravel-streams/mix-extension",
-    "version": "1.0.6",
+    "version": "1.2.0",
     "publishConfig": {
         "access": "public"
     },

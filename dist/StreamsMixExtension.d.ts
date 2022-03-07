@@ -1,4 +1,4 @@
-import { ClassComponent } from 'laravel-mix/types/component';
+import { ComponentInterface } from 'laravel-mix/types/component';
 import { Options as TSConfig } from 'ts-loader';
 import * as webpack from 'webpack';
 import { TransformOptions } from '@babel/core';
@@ -41,7 +41,7 @@ export interface StreamsMixExtensionOptions {
     name: [string, string] | undefined;
     type: 'var' | 'module' | 'assign' | 'assign-properties' | 'this' | 'window' | 'self' | 'global' | 'commonjs' | 'commonjs2' | 'commonjs-module' | 'amd' | 'amd-require' | 'umd' | 'umd2' | 'jsonp' | 'system';
 }
-export declare class StreamsMixExtension implements ClassComponent {
+export declare class StreamsMixExtension implements ComponentInterface {
     options: StreamsMixExtensionOptions;
     register(options: StreamsMixExtensionOptions): void;
     dependencies(): any[];
@@ -51,7 +51,7 @@ export declare class StreamsMixExtension implements ClassComponent {
     babelConfig(): TransformOptions;
     tsConfig(): Partial<TSConfig>;
     getRootProjectPath(): string;
-    getStreamPackages(): Record<string, import("./utils").StreamPackage>;
+    getStreamPackages(): Record<string, import("./StreamPackage").StreamPackage>;
     webpackConfig(config: webpack.Configuration): void;
     webpackRules(): webpack.RuleSetRule | webpack.RuleSetRule[];
 }

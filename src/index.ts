@@ -14,3 +14,4 @@ export { StreamsMixExtension, StreamsMixExtensionOptions };
 export default StreamsMixExtension;
 
 export * from './utils';
+export * from './StreamPackage';
