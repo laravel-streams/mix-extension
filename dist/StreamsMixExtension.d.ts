@@ -17,6 +17,8 @@ export interface StreamsMixExtensionOptions {
     tsConfig?: Partial<TSConfig>;
     alterBabelConfig?: boolean;
     combineTsLoaderWithBabel?: boolean;
+    analyse?: boolean;
+    cwd?: string;
     /**
      * Will result into :
      * ```ts
@@ -35,6 +37,7 @@ export interface StreamsMixExtensionOptions {
      * defaults to 'artisan'
      */
     rootProjectFile?: string;
+    entryFile?: string;
     filename?: string;
     chunkFilename?: string;
     path?: string;
@@ -44,6 +47,7 @@ export interface StreamsMixExtensionOptions {
 export declare class StreamsMixExtension implements ComponentInterface {
     options: StreamsMixExtensionOptions;
     register(options: StreamsMixExtensionOptions): void;
+    protected path(...parts: string[]): string;
     dependencies(): any[];
     boot(): void;
     name(): string;

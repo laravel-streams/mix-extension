@@ -5,6 +5,8 @@ import { Options as TSConfig } from 'ts-loader';
 import * as webpack from 'webpack';
 import { TransformOptions } from '@babel/core';
 import { findFileUp, findStreamPackages } from './utils';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import VisualizerPlugin from 'webpack-visualizer-plugin';
 
 let isProd = mix.inProduction();
 let isDev  = !mix.inProduction();
@@ -37,7 +39,8 @@ export interface StreamsMixExtensionOptions {
     tsConfig?: Partial<TSConfig>;
     alterBabelConfig?: boolean;
     combineTsLoaderWithBabel?: boolean;
-
+    analyse?: boolean;
+    cwd?: string; // current dir
     /**
      * Will result into :
      * ```ts
@@ -57,6 +60,7 @@ export interface StreamsMixExtensionOptions {
      * defaults to 'artisan'
      */
     rootProjectFile?: string;
+    entryFile?: string; //resources/lib/index.ts
     filename?: string;
     chunkFilename?: string;
     path?: string;
@@ -70,19 +74,23 @@ export class StreamsMixExtension implements ComponentInterface {
     options: StreamsMixExtensionOptions;
 
     public register(options: StreamsMixExtensionOptions) {
+        const cwd    = options.cwd || process.cwd();
         this.options = {
             combineTsLoaderWithBabel: true,
             alterBabelConfig        : true,
             rootProjectFile         : 'artisan',
             tsConfig                : {},
-            path                    : resolve(process.cwd(), 'resources/public'),
+            cwd                     : cwd,
+            analyse                 : false,
+            entryFile               : 'resources/lib/index.ts',
+            path                    : resolve(cwd, 'resources/public'),
             filename                : 'js/[name].js',
             chunkFilename           : 'js/chunk.[name].js',
             type                    : 'window',
             ...options,
             ts             : {
-                configFile    : resolve(process.cwd(), 'webpack.tsconfig.json'),
-                declarationDir: resolve(process.cwd(), 'resources/public/types'),
+                configFile    : resolve(cwd, 'webpack.tsconfig.json'),
+                declarationDir: resolve(cwd, 'resources/public/types'),
                 declaration   : true,
                 ...options.ts || {},
             },
@@ -94,6 +102,10 @@ export class StreamsMixExtension implements ComponentInterface {
 
 
         return;
+    }
+
+    protected path(...parts: string[]) {
+        return resolve(this.options.cwd, ...parts);
     }
 
     public dependencies() {return dependencies;}
@@ -178,6 +190,26 @@ export class StreamsMixExtension implements ComponentInterface {
 
         config.experiments              = config.experiments || {};
         config.experiments.outputModule = this.options.type === 'module';
+        let entries                     = config.entry as string[];
+        let entryFile                   = this.path(this.options.entryFile);
+        let name                        = Array.isArray(this.options.name) ? this.options.name.join('/') : this.options.name;
+        let filename                    = Array.isArray(this.options.name) ? this.options.name[ this.options.name.length - 1 ] : this.options.name;
+        config.entry                    = {
+            [ name ]: {
+                import  : entryFile,
+                filename: `js/${filename}.js`,
+                library : {
+                    name: this.options.name,
+                    type: this.options.type,
+                } as any,
+            },
+        };
+        Object.entries(entries).forEach(([ key, value ]) => {
+            if ( Array.isArray(value) ) {
+                config.entry[ key ] = value.filter(entry => entry !== entryFile);
+            }
+        });
+
 
         const streamPackages = this.getStreamPackages();
         Object.values(streamPackages).forEach(streamPackage => {
@@ -197,7 +229,7 @@ export class StreamsMixExtension implements ComponentInterface {
             chunkFilename                        : this.options.chunkFilename,
             library                              : {
                 name: this.options.name,
-                type: this.options.type,
+                type: this.options.type || 'assign',
             },
             publicPath                           : `/vendor/${this.options.name[ 0 ]}/${this.options.name[ 1 ]}/`,
             devtoolFallbackModuleFilenameTemplate: 'webpack:///[resource-path]?[hash]',
@@ -219,13 +251,22 @@ export class StreamsMixExtension implements ComponentInterface {
 
         const ruleIndex = config.module.rules.findIndex((rule: webpack.RuleSetRule) => typeof rule.loader === 'string' && rule.loader.endsWith('ts-loader/index.js'));
         config.module.rules.splice(ruleIndex, 1);
-        // delete rule.loader;
-        // delete rule.options;
-        // rule.use            = [
-        //     { loader: 'babel-loader', options: this.babelConfig() },
-        //     { loader: 'ts-loader', options: this.tsConfig() },
-        // ];
+
+
+        if ( this.options.analyse ) {
+            config.plugins.push(new BundleAnalyzerPlugin({
+                analyzerMode  : 'static',
+                reportFilename: './bundle-analyzer.html',
+                defaultSizes  : 'gzip',
+            }));
+            config.plugins.push(new VisualizerPlugin({
+
+                filename: './bundle-visualizer.html',
+            }));
+        }
+
     }
+
 
     public webpackRules(): webpack.RuleSetRule | webpack.RuleSetRule[] {
         return [ {
