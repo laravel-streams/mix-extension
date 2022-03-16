@@ -6,7 +6,6 @@ import * as webpack from 'webpack';
 import { TransformOptions } from '@babel/core';
 import { findFileUp, findStreamPackages } from './utils';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
-import VisualizerPlugin from 'webpack-visualizer-plugin';
 
 let isProd = mix.inProduction();
 let isDev  = !mix.inProduction();
@@ -150,13 +149,14 @@ export class StreamsMixExtension implements ComponentInterface {
 
     public tsConfig(): Partial<TSConfig> {
         return {
-            appendTsSuffixTo: [ /\.vue$/ ],
-            transpileOnly   : true,
-            logLevel        : 'INFO',
-            logInfoToStdOut : true,
-            happyPackMode   : true, experimentalWatchApi: true,
-            configFile      : this.options.ts.configFile,
-            compilerOptions : {
+            appendTsSuffixTo    : [ /\.vue$/ ],
+            transpileOnly       : true,
+            logLevel            : 'INFO',
+            logInfoToStdOut     : true,
+            happyPackMode       : true,
+            experimentalWatchApi: true,
+            configFile          : this.options.ts.configFile,
+            compilerOptions     : {
                 target        : 'es6' as any,
                 module        : 'esnext' as any,
                 declaration   : this.options.ts.declaration,
@@ -194,21 +194,19 @@ export class StreamsMixExtension implements ComponentInterface {
         let entryFile                   = this.path(this.options.entryFile);
         let name                        = Array.isArray(this.options.name) ? this.options.name.join('/') : this.options.name;
         let filename                    = Array.isArray(this.options.name) ? this.options.name[ this.options.name.length - 1 ] : this.options.name;
-        config.entry                    = {
-            [ name ]: {
-                import  : entryFile,
-                filename: `js/${filename}.js`,
-                library : {
-                    name: this.options.name,
-                    type: this.options.type,
-                } as any,
-            },
-        };
         Object.entries(entries).forEach(([ key, value ]) => {
             if ( Array.isArray(value) ) {
                 config.entry[ key ] = value.filter(entry => entry !== entryFile);
             }
         });
+        config.entry[ name ]            = {
+            import  : entryFile,
+            filename: `js/${filename}.js`,
+            library : {
+                name: this.options.name,
+                type: this.options.type,
+            } as any,
+        };
 
 
         const streamPackages = this.getStreamPackages();
@@ -253,15 +251,12 @@ export class StreamsMixExtension implements ComponentInterface {
         config.module.rules.splice(ruleIndex, 1);
 
 
+
         if ( this.options.analyse ) {
             config.plugins.push(new BundleAnalyzerPlugin({
                 analyzerMode  : 'static',
                 reportFilename: './bundle-analyzer.html',
                 defaultSizes  : 'gzip',
-            }));
-            config.plugins.push(new VisualizerPlugin({
-
-                filename: './bundle-visualizer.html',
             }));
         }
 

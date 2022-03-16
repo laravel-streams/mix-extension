@@ -2,7 +2,6 @@
     "compileOnSave": true,
     "compilerOptions": {
         "pretty": true,
-        "inlineSourceMap": true,
         "declaration": true,
         "declarationDir": "./dist",
         "outDir": "./dist",
@@ -21,6 +20,7 @@
         "noImplicitThis": false,
         "resolveJsonModule": true,
         "noImplicitUseStrict": false,
+        "sourceMap": true,
         "baseUrl": ".",
         "typeRoots": [
             "node_modules/@types",

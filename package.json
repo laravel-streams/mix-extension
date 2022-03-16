@@ -29,7 +29,6 @@
         "@babel/preset-env": "^7.15.8",
         "@types/webpack-bundle-analyzer": "^4.4.1",
         "webpack-bundle-analyzer": "^4.5.0",
-        "webpack-visualizer-plugin": "^0.1.11",
         "glob": "^7.2.0",
         "resolve-dir": "^1.0.1",
         "ts-lib": "^0.0.5",

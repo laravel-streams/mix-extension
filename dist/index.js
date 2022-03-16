@@ -10,4 +10,4 @@ laravel_mix_1.default.extend(extension.name(), extension);
 exports.default = StreamsMixExtension_1.StreamsMixExtension;
 tslib_1.__exportStar(require("./utils"), exports);
 tslib_1.__exportStar(require("./StreamPackage"), exports);
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7OztBQUFBLHNFQUE4QjtBQUM5QiwrREFBd0Y7QUFXL0Usb0dBWEEseUNBQW1CLE9BV0E7QUFINUIsTUFBTSxTQUFTLEdBQUcsSUFBSSx5Q0FBbUIsRUFBRSxDQUFDO0FBQzVDLHFCQUFHLENBQUMsTUFBTSxDQUFDLFNBQVMsQ0FBQyxJQUFJLEVBQUUsRUFBRSxTQUFTLENBQUMsQ0FBQztBQUd4QyxrQkFBZSx5Q0FBbUIsQ0FBQztBQUVuQyxrREFBd0I7QUFDeEIsMERBQWdDIn0=
+//# sourceMappingURL=index.js.map
