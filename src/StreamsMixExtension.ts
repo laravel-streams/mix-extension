@@ -199,7 +199,7 @@ export class StreamsMixExtension implements ComponentInterface {
                 config.entry[ key ] = value.filter(entry => entry !== entryFile);
             }
         });
-        config.entry[ name ]            = {
+        config.entry[ name ] = {
             import  : entryFile,
             filename: `js/${filename}.js`,
             library : {
@@ -251,12 +251,12 @@ export class StreamsMixExtension implements ComponentInterface {
         config.module.rules.splice(ruleIndex, 1);
 
 
-
         if ( this.options.analyse ) {
             config.plugins.push(new BundleAnalyzerPlugin({
                 analyzerMode  : 'static',
                 reportFilename: './bundle-analyzer.html',
                 defaultSizes  : 'gzip',
+                openAnalyzer  : false,
             }));
         }
 

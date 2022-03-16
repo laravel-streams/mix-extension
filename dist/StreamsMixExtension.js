@@ -155,6 +155,7 @@ class StreamsMixExtension {
                 analyzerMode: 'static',
                 reportFilename: './bundle-analyzer.html',
                 defaultSizes: 'gzip',
+                openAnalyzer: false,
             }));
         }
     }
