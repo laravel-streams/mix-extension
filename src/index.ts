@@ -1,3 +1,5 @@
+///<reference path="modules.d.ts"/>
+
 import mix from 'laravel-mix';
 import { StreamsMixExtension, StreamsMixExtensionOptions } from './StreamsMixExtension';
 

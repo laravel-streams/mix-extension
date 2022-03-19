@@ -1,46 +1,42 @@
 import { isMainThread } from 'worker_threads';
 import { exec, execSync } from 'child_process';
-
-export interface StreamPackageConfigScripts {
-
-    dev?: string | null;
-    prod?: string | null;
-    watch?: string | null;
-    test?: string | null;
-}
-
-export type StreamPackageConfigScript = keyof StreamPackageConfigScripts;
-
-export interface StreamPackageConfig {
-    output: {
-        name: [ string, string ]
-        type: 'module' | 'commonjs' | 'assign'
-    },
-    src: string
-    bundler: 'webpack' | 'mix' | 'rollup' | null,
-    scripts: StreamPackageConfigScripts
-}
-
-export interface StreamPackageInfo {
-    pkg: any,
-    streams: StreamPackageConfig
-    packagePath: string,
-    composerPath?: string,
-    path: string,
-    composer?: any,
-}
+import { StreamPackageConfig, StreamPackageConfigScript, StreamPackageInfo } from './types';
+import { PackageManifest } from '@pnpm/types';
+import { getDependencies } from './dependencies';
+import { DependencyCollection } from './DependencyCollection';
+import { StreamPackageCollection } from './StreamPackageCollection';
+import { StreamPackageManager } from './StreamPackageManager';
 
 export class StreamPackage implements StreamPackageInfo {
     static scripts: StreamPackageConfigScript[] = [ 'dev', 'prod', 'watch', 'test' ];
     static manager: 'yarn' | 'pnpm' | 'npm'     = 'yarn';
     public packagePath: string;
-    public pkg: any;
+    public pkg: PackageManifest;
     public streams: StreamPackageConfig;
     public path: string;
 
-    constructor(info: StreamPackageInfo) {
+    public get dependencies(): DependencyCollection {
+        let deps = getDependencies(this.pkg, this.manager);
+
+        return deps;
+    }
+
+    public get vendorDependencies():DependencyCollection {
+        return this.dependencies.withoutStreamPackages();
+    }
+
+    public get streamPackageDependencies():DependencyCollection {
+        return this.dependencies.streamPackages();
+    }
+
+    public getStreamPackageDependencies(streamPackages:StreamPackageCollection):StreamPackage[]{
+        return this.streamPackageDependencies.keySeq().toArray().map(name => streamPackages.get(name));
+    }
+
+    constructor(info: StreamPackageInfo, protected manager:StreamPackageManager) {
         Object.assign(this, info);
     }
+
 
     isBundler(name?: StreamPackageConfig['bundler']) {
         if ( name ) {
@@ -93,3 +89,14 @@ export class StreamPackage implements StreamPackageInfo {
     }
 
 }
+
+
+/*
+
+streampackage
+    depends on streampackage(s) => external streams.<name>
+    depends on own dependencies => expose
+    depends on streampackages => each streampackage => dependencies without streampackages => remove dependency from expose and add to external
+
+
+ */

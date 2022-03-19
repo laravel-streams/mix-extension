@@ -1,44 +1,35 @@
-import { glob } from 'glob';
-import path, { dirname, join, resolve } from 'path';
-import fs, { existsSync, readFileSync } from 'fs';
+import path, { join, resolve } from 'path';
+import fs from 'fs';
 
 import resolveDir from 'resolve-dir';
-import { StreamPackage, StreamPackageInfo } from './StreamPackage';
+import { Map as EMap } from 'extendable-immutable';
+import { Map as IMap } from 'immutable';
 
-
-export function findStreamPackages(rootDir: string = process.cwd()): Record<string, StreamPackage> {
-    const streamPackages: Record<string, StreamPackage> = {};
-
-    glob.sync(resolve(rootDir, '**/package.json'), { ignore: [ 'node_modules' ] })
-        .map(packagePath => {
-            let pkg;
-            try {
-                let json = readFileSync(packagePath, 'utf8');
-                pkg      = JSON.parse(json);
-            } catch (e) {
-                // console.warn(packagePath,e);
-            }
-            return {
-                pkg,
-                packagePath,
-            };
-        })
-        .filter(obj => obj?.pkg?.streams !== undefined)
-        .forEach((obj: StreamPackageInfo) => {
-            obj.streams        = obj.pkg.streams;
-            obj.path           = dirname(obj.packagePath);
-            const composerPath = resolve(dirname(obj.packagePath), 'composer.json');
-            obj.composerPath   = existsSync(composerPath) ? composerPath : null;
-            if ( obj.composerPath ) {
-                obj.composer = require(obj.composerPath);
-            }
-            streamPackages[ obj.pkg.name ] = new StreamPackage(obj);
-        });
-
-
-    return streamPackages;
-
+export interface Map<K extends string, V> extends IMap<K, V> {
+    constructor(obj)
 }
+
+export class Map<K extends string, V> extends EMap<K, V> {
+    constructor(obj) {
+        super(obj);
+        this.asMutable()
+    }
+}
+
+/**
+ *
+ * @param obj
+ * @param k
+ * @param v
+ * @example
+ *
+ * params = Object.entries(params).filter(([ key, value ]) => {
+ *     return value.toString().length > 0;
+ * }).reduce(utils.objectify, {});
+ *
+ */
+export const objectify = (obj, [ k, v ]) => ({ ...obj, [ k ]: v });
+
 
 export function findFileUp(filename: string, cwd: string, limit: number = Infinity) {
     let dirname = resolve(cwd ? resolveDir(cwd) : '.');
