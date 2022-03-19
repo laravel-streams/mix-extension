@@ -1,7 +1,8 @@
 ///<reference path="modules.d.ts"/>
 
 import mix from 'laravel-mix';
-import { StreamsMixExtension, StreamsMixExtensionOptions } from './StreamsMixExtension';
+import { StreamsMixExtension } from './StreamsMixExtension';
+import { StreamsMixExtensionOptions } from './types';
 
 declare module 'laravel-mix/types/index' {
     interface Api {
@@ -15,5 +16,4 @@ mix.extend(extension.name(), extension);
 export { StreamsMixExtension, StreamsMixExtensionOptions };
 export default StreamsMixExtension;
 
-export * from './utils';
-export * from './StreamPackage';
+export * from './types';

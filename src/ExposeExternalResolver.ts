@@ -7,18 +7,6 @@ export interface Resolved {
     external: string[];
 }
 
-let resolved: Record<string, Resolved> = {
-    '@laravel-streams/ui' : {
-        expose  : [ 'camelcase', 'collect.js', 'deepmerge', 'tapable', 'axios', 'debug', 'eventemitter2', 'inversify', 'csx', 'inversify-inject-decorators', 'lz-string', '@microsoft/fast-element', '@microsoft/fast-foundation', 'reflect-metadata', 'classnames', 'typestyle', 'csstips', 'mousetrap', 'object-observer' ],
-        external: [],
-    },
-    '@laravel-streams/api': {
-        expose  : [ '@laravel-streams/api-client' ],
-        external: [ '@laravel-streams/ui', 'camelcase', 'collect.js', 'deepmerge', 'tapable', 'lz-string', 'axios', 'reflect-metadata' ],
-    },
-};
-
-
 export class ExposeExternalResolver {
     protected packages: StreamPackageCollection;
     protected package: StreamPackage;
@@ -38,20 +26,6 @@ export class ExposeExternalResolver {
             expose: [],
             external: []
         };
-    }
-
-    protected getResolved(pkg: StreamPackage) {
-        return this.resolved[ pkg.pkg.name ] = this.resolved[ pkg.pkg.name ] || { expose: [], external: [] };
-    }
-
-    protected expose(pkg: StreamPackage, expose: string[]) {
-        this.getResolved(pkg).expose.push(...expose);
-        return this;
-    }
-
-    protected external(pkg: StreamPackage, external: string[]) {
-        this.getResolved(pkg).external.push(...external);
-        return this;
     }
 
     resolve() {
@@ -76,14 +50,3 @@ export class ExposeExternalResolver {
         return this.resolved;
     }
 }
-
-
-/*
-
-streampackage
-    depends on streampackage(s) => external streams.<name>
-    depends on own dependencies => expose
-    depends on streampackages => each streampackage => dependencies without streampackages => remove dependency from expose and add to external
-
-
- */

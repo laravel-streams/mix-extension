@@ -6,13 +6,13 @@ import { Map as EMap } from 'extendable-immutable';
 import { Map as IMap } from 'immutable';
 
 export interface Map<K extends string, V> extends IMap<K, V> {
-    constructor(obj)
+    constructor(obj);
 }
 
 export class Map<K extends string, V> extends EMap<K, V> {
     constructor(obj) {
         super(obj);
-        this.asMutable()
+        this.asMutable();
     }
 }
 

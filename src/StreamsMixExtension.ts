@@ -6,11 +6,9 @@ import webpack from 'webpack';
 import { TransformOptions } from '@babel/core';
 import { findFileUp,  objectify } from './utils';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
-import { PackageJson } from './types';
+import { PackageJson, StreamsMixExtensionOptions } from './types';
 import { StreamPackage } from './StreamPackage';
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
-import { readJSONSync, writeJSONSync } from 'fs-extra';
-import { Exposer } from './Exposer';
 import { StreamPackageManager } from './StreamPackageManager';
 import { StreamPackageCollection } from './StreamPackageCollection';
 import { Resolved } from './ExposeExternalResolver';
@@ -18,75 +16,22 @@ import { Resolved } from './ExposeExternalResolver';
 let isProd = mix.inProduction();
 let isDev  = !mix.inProduction();
 
-const line = (message: string) => {
-    process.stdout.write(message + '\n');
-};
-
-const dependencies = [
-    // "@babel/core",
-    // "@babel/plugin-syntax-dynamic-import",
-    // "@babel/preset-env",
-    // "laravel-mix",
-    // "ts-lib",
-    // "ts-loader",
-    // "ts-node",
-    // "typescript",
-    // "webpack",
-];
-
-/** npm package vendor name, excluding the @ sign. like `laravel-streams` */
-export type PackageName = string
-/** The exported library name prefix like 'streams' */
-export type PackageNamespacePrefix = string
-/** The exported library name like 'api' */
-export type PackageNamespaceName = string
-
-export interface StreamsMixExtensionOptions {
-    ts?: {
-        configFile?: string
-        declarationDir?: string
-        declaration?: boolean
-    };
-    tsConfig?: Partial<TSConfig>;
-    alterBabelConfig?: boolean;
-    combineTsLoaderWithBabel?: boolean;
-    analyse?: boolean;
-    cwd?: string; // current dir
-    /**
-     * If the {@see StreamsMixExtensionOptions.streamsPackages} doesn't comply with your wishes, then do it yourself:
-     */
-    externals?: Record<string, string>;
-
-    exposePrefix?: string;
-    expose?: Record<string, string>;
-    use?: Record<string, string>;
-
-    /**
-     * The extension needs to know the root project's absolute path.
-     * It will search upwards from the directory mix is called for this file
-     * defaults to 'artisan'
-     */
-    rootProjectFile?: string;
-    entryFile?: string; //resources/lib/index.ts
-    filename?: string;
-    chunkFilename?: string;
-    path?: string;
-    name: string | [ string, string ] | undefined;
-    type: 'var' | 'module' | 'assign' | 'assign-properties' | 'this' | 'window' | 'self' | 'global' | 'commonjs' | 'commonjs2' | 'commonjs-module' | 'amd' | 'amd-require' | 'umd' | 'umd2' | 'jsonp' | 'system';
-}
 
 
 export class StreamsMixExtension implements ComponentInterface {
     manager: StreamPackageManager;
+    resolved:Resolved
+    options: StreamsMixExtensionOptions;
+    pkg: PackageJson;
+    exposeFilePath: string;
+    entryFilePath: string;
 
     get streamPackages(): StreamPackageCollection { return this.manager.packages; }
 
     get streamPackage(): StreamPackage {return this.manager.package;}
 
-    options: StreamsMixExtensionOptions;
-    pkg: PackageJson;
-    exposeFilePath: string;
-    entryFilePath: string;
+
+    public name() {return 'streams';}
 
     public register(options: StreamsMixExtensionOptions) {
         const cwd    = options.cwd || process.cwd();
@@ -124,74 +69,6 @@ export class StreamsMixExtension implements ComponentInterface {
         this.exposeFilePath = resolve(dirname(this.entryFilePath), '_expose.ts');
     }
 
-    formatName(name: string): string {
-        return name
-        .replace(/\@/gm, '')
-        .replace(/\//gm, '__')
-        .replace(/\-/gm, '_')
-        .replace(/\./gm, '');
-    }
-
-    getImportName(name:string){
-        return this.options.exposePrefix + '.' + this.formatName(name);
-    }
-
-
-    createExposeFile(expose:string[]) {
-        const lines = [];
-        let prefix = [];
-        let segments = this.options.exposePrefix.split('.');
-        for(let segment of segments){
-            prefix.push(segment)
-            lines.push('//@ts-ignore')
-            lines.push(`window.${prefix.join('.')} = window.${prefix.join('.')} || {};`)
-        }
-        expose.forEach(name => {
-            let formatName = this.formatName(name)
-            lines.push(`import * as ${formatName} from '${name}';`);
-            lines.push('//@ts-ignore');
-            lines.push(`window.${this.options.exposePrefix}.${formatName} = ${formatName};`);
-        });
-        const content = lines.join('\n');
-        this.deleteExposeFile();
-        writeFileSync(this.exposeFilePath, content, 'utf8');
-    }
-
-    deleteExposeFile() {
-        if ( existsSync(this.exposeFilePath) ) {
-            unlinkSync(this.exposeFilePath);
-        }
-    }
-
-    addExposeFileToEntry() {
-        let exposeFileName = basename(this.exposeFilePath);
-        let importLine     = `import './${exposeFileName}';`;
-        let lines          = readFileSync(this.entryFilePath, 'utf8').split('\n');
-        if ( !lines.includes(importLine) ) {
-            lines.push(importLine);
-        }
-        writeFileSync(this.entryFilePath, lines.join('\n'), 'utf8');
-    }
-
-    removeExposeFileFromEntry() {
-        let exposeFileName = basename(this.exposeFilePath);
-        let importLine     = `import './${exposeFileName}';`;
-        let lines          = readFileSync(this.entryFilePath, 'utf8').split('\n');
-        let index          = lines.findIndex(l => l.trim() === importLine);
-        if ( index ) {
-            lines.splice(index, 1);
-            writeFileSync(this.entryFilePath, lines.join('\n'), 'utf8');
-        }
-    }
-
-    protected path(...parts: string[]) {
-        return resolve(this.options.cwd, ...parts);
-    }
-
-    public dependencies() {return dependencies;}
-
-    resolved:Resolved
-
     public boot() {
         this.resolved = this.manager.resolveExposeExternal();
         this.createExposeFile(this.resolved.expose);
@@ -210,7 +87,9 @@ export class StreamsMixExtension implements ComponentInterface {
         });
     }
 
-    public name() {return 'streams';}
+    public babelConfig(): TransformOptions {
+        return this.options.alterBabelConfig ? this.getBabelConfig() : undefined;
+    }
 
     public webpackConfig(config: webpack.Configuration) {
         config.devtool       = isDev ? 'inline-cheap-module-source-map' : false;
@@ -246,9 +125,6 @@ export class StreamsMixExtension implements ComponentInterface {
         };
 
         this.streamPackages.forEach(streamPackage => {
-            if ( false === [ 'mix', 'webpack' ].includes(streamPackage.streams.bundler) ) {
-                return;
-            }
             let [ prefix, name ] = streamPackage.streams.output.name;
             let packageName      = streamPackage.pkg.name;
             if ( this.options.name[ 0 ] === prefix && this.options.name[ 1 ] === name ) return;
@@ -300,7 +176,6 @@ export class StreamsMixExtension implements ComponentInterface {
 
     }
 
-
     public webpackRules(): webpack.RuleSetRule | webpack.RuleSetRule[] {
         return [ {
             test   : /\.tsx?$/,
@@ -311,6 +186,7 @@ export class StreamsMixExtension implements ComponentInterface {
             ],
         } ];
     }
+
 
 
     protected getBabelConfig(): TransformOptions {
@@ -334,11 +210,7 @@ export class StreamsMixExtension implements ComponentInterface {
         };
     }
 
-    public babelConfig(): TransformOptions {
-        return this.options.alterBabelConfig ? this.getBabelConfig() : undefined;
-    }
-
-    public tsConfig(): Partial<TSConfig> {
+    protected tsConfig(): Partial<TSConfig> {
         return {
             appendTsSuffixTo    : [ /\.vue$/ ],
             transpileOnly       : true,
@@ -359,12 +231,75 @@ export class StreamsMixExtension implements ComponentInterface {
         };
     };
 
-    public getRootProjectPath() {
+    protected getRootProjectPath() {
         const filePath = findFileUp(this.options.rootProjectFile, __dirname);
         if ( !filePath ) {
             throw new Error(`could not find root project path based on searching for file "${this.options.rootProjectFile}"`);
         }
         return dirname(filePath);
+    }
+
+    protected formatName(name: string): string {
+        return name
+        .replace(/\@/gm, '')
+        .replace(/\//gm, '__')
+        .replace(/\-/gm, '_')
+        .replace(/\./gm, '');
+    }
+
+    protected getImportName(name:string){
+        return this.options.exposePrefix + '.' + this.formatName(name);
+    }
+
+    protected createExposeFile(expose:string[]) {
+        const lines = [];
+        let prefix = [];
+        let segments = this.options.exposePrefix.split('.');
+        for(let segment of segments){
+            prefix.push(segment)
+            lines.push('//@ts-ignore')
+            lines.push(`window.${prefix.join('.')} = window.${prefix.join('.')} || {};`)
+        }
+        expose.forEach(name => {
+            let formatName = this.formatName(name)
+            lines.push(`import * as ${formatName} from '${name}';`);
+            lines.push('//@ts-ignore');
+            lines.push(`window.${this.options.exposePrefix}.${formatName} = ${formatName};`);
+        });
+        const content = lines.join('\n');
+        this.deleteExposeFile();
+        writeFileSync(this.exposeFilePath, content, 'utf8');
+    }
+
+    protected deleteExposeFile() {
+        if ( existsSync(this.exposeFilePath) ) {
+            unlinkSync(this.exposeFilePath);
+        }
+    }
+
+    protected addExposeFileToEntry() {
+        let exposeFileName = basename(this.exposeFilePath);
+        let importLine     = `import './${exposeFileName}';`;
+        let lines          = readFileSync(this.entryFilePath, 'utf8').split('\n');
+        if ( !lines.includes(importLine) ) {
+            lines.push(importLine);
+        }
+        writeFileSync(this.entryFilePath, lines.join('\n'), 'utf8');
+    }
+
+    protected removeExposeFileFromEntry() {
+        let exposeFileName = basename(this.exposeFilePath);
+        let importLine     = `import './${exposeFileName}';`;
+        let lines          = readFileSync(this.entryFilePath, 'utf8').split('\n');
+        let index          = lines.findIndex(l => l.trim() === importLine);
+        if ( index ) {
+            lines.splice(index, 1);
+            writeFileSync(this.entryFilePath, lines.join('\n'), 'utf8');
+        }
+    }
+
+    protected path(...parts: string[]) {
+        return resolve(this.options.cwd, ...parts);
     }
 
 }
